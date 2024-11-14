@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 import os
 import json
 import uuid
+from gemini_chat_handler import GeminiChatHandler
 
 MODEL_NAME = "gemini-1.5-flash"
 CONFIG_FILE = "model_config.txt"
