@@ -1,115 +1,64 @@
-import google.generativeai as genai
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-from dotenv import load_dotenv
 from flask import Flask, request, jsonify
-import os
-import json
-import uuid
 from gemini_chat_handler import GeminiChatHandler
-
-MODEL_NAME = "gemini-1.5-flash"
-CONFIG_FILE = "model_config.txt"
-GENERATE_SUMMARY_PROMPT_FILE = "summary_prompt.txt"
-CHAT_HISTORY_FILE = "current_chat_history.json"
-TIMEOUT_DURATION = 10 #seconds
-
-# get api key
-load_dotenv('.env')
-genai.configure(api_key=os.getenv("API_KEY"))
-
-# Create the model
-generation_config = {
-  "temperature": 2,
-  "top_p": 0.95,
-  "top_k": 64,
-  "max_output_tokens": 150,
-  "response_mime_type": "text/plain",
-}
-# this is in json. so is generation_config
-safety_settings={
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-}
-
-with open(CONFIG_FILE, "r") as file:
-    content = file.read()
-    model = genai.GenerativeModel(
-        model_name=MODEL_NAME, 
-        system_instruction=content, 
-        generation_config=generation_config, 
-        safety_settings=safety_settings
-    )
+import copy
 
 # Initialize flask app
 app = Flask(__name__)
 
-# empty initial chat history
-current_chat_history = []
-
-current_chat_session = model.start_chat(history=current_chat_history)
-
-def save_chat_history(session_id, current_chat_history):
-    try:
-        with open(CHAT_HISTORY_FILE, "r") as file:
-            all_histories = json.load(file)
-    except(FileNotFoundError, json.JSONDecodeError):
-        all_histories = {}
-
-    summary = generate_summary()
-
-    all_histories[session_id] = {"history": current_chat_history, "summary": summary};
-
-    with open(CHAT_HISTORY_FILE, "w") as file:
-        json.dump(all_histories, file)
-
-# generates summary of the current chat session
-def generate_summary() -> str:
-    response = current_chat_session.send_message("Summarize this conversation in less than 5 words.")
-    return response.text.strip()
+chat_handler = GeminiChatHandler()
         
 
 @app.route("/api/gemini/request", methods=['POST'])
 def handle_user_request():
-    global current_chat_session, current_chat_history
-    try:
-        data = request.json
-        user_input = data.get("prompt", "")
+    data = request.json
+    user_input = data.get("prompt", "")
 
-        if not user_input:
-            return jsonify({"response": "Prompt is required"}), 400
-        
-        current_chat_history.append({"role": "user", "parts": [user_input]})
-        response = current_chat_session.send_message(user_input)
-        current_chat_history.append({"role": "model", "parts": [response.text]})
+    if not user_input:
+        return jsonify("Prompt is required"), 400
+    
+    response, status_code = chat_handler.send_message(user_input)
+    return jsonify(response), status_code
 
-        cleaned_text = response.text.rstrip() # remove white space at the end, since gemini seems to add extra newlines
-        return jsonify({"response": cleaned_text}), 200
 
-    except Exception as e:
-        return jsonify({"response": str(e)}), 500
-
-# @app.route("/api/gemini/create_session", methods=['POST'])
-# def create_session():
-#     session_id = str(uuid.uuid4())
-#     return jsonify({"session_id": session_id})
-
-@app.route("/api/gemini/new", methods=['POST'])
+@app.route("/api/gemini/new_chat", methods=['POST'])
 def start_new_chat():
-    global current_chat_session, current_chat_history
-    save_chat_history() # TODO: add session id and chat history
-    try:
-        data = request.json
+        response, status_code = chat_handler.start_new_chat()
+        return jsonify(response), status_code
 
-        current_chat_history = data.get("history", []);
 
-        current_chat_session = model.start_chat(history=current_chat_history)
+@app.route("/api/gemini/load_chat", methods=['POST'])
+def load_chat():
+    data = request.json
+    session_id = data.get("sessionId", "")
+    
+    if not session_id:
+        return jsonify("Session ID is required"), 400
+    
+    response, status_code = chat_handler.load_chat(session_id)
+    return jsonify(response), status_code
 
-        return jsonify({"response": ""}), 200
+@app.route("/api/gemini/current_session_id", methods=['GET'])
+def get_current_session_id():
+    session_id = chat_handler.get_current_session_id()
+    return jsonify(session_id), 200
 
-    except Exception as e:
-        return jsonify({"response": str(e)}), 500
+
+@app.route("/api/gemini/all_chats", methods=['GET'])
+def get_all_chats():
+    all_chats = chat_handler.get_all_chats()
+    return jsonify(all_chats), 200
+
+
+@app.route("/api/gemini/all_chat_summaries", methods=['GET'])
+def get_all_chat_summaries():
+    all_chats = copy.deepcopy(chat_handler.get_all_chats()) # create a copy of chat_handler's all_chats
+    
+    # remove history to save on memory
+    for chat in all_chats:
+        chat.pop("history", None)
+        
+    return jsonify(all_chats), 200
+
 
 if __name__ == "__main__":
     app.run(debug=True); # for testing and debugging

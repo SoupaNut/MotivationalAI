@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import '../api/api_service.dart';
+import '../api/gemini_response.dart';
 import '../widgets/message_bubble.dart';
 import '../util/constants.dart';
+
+const Map<String, Roles> roleMapping = {
+  "user": Roles.user,
+  "model": Roles.model,
+};
 
 class UserInputField extends StatefulWidget {
   const UserInputField({super.key});
@@ -16,10 +22,27 @@ class UserInputFieldState extends State<UserInputField> {
   final List<Message> _messages = [];
   Future<GeminiResponse>? _apiResponseFuture;
 
-  void startNewChat() {
+  void clearMessages() {
     setState(() {
-      _apiResponseFuture = apiStartNewChat();
       _messages.clear();
+    });
+  }
+
+  void loadChat(String sessionId) async {
+    final response = await apiLoadChat(sessionId);
+    final history = ((response.statusCode == 200) ? response.data["history"] : []) as List<dynamic>;
+
+    setState(() {
+      _messages.clear();
+      _messages.addAll(history.reversed.map((message) {
+        final role = roleMapping[message["role"]] ?? Roles.user;
+        final text = message["parts"].join("\n");
+        return Message(
+          text: text,
+          role: role,
+          statusCode: 200,
+        );
+      }));
     });
   }
 
@@ -46,11 +69,12 @@ class UserInputFieldState extends State<UserInputField> {
       if (role == Roles.user) {
         setState(() {
           _apiResponseFuture = apiSendMessage(text).then((reply) {
+            // print(reply.text);
             setState(() {
               _messages.insert(
                 0,
                 Message(
-                  text: reply.text,
+                  text: reply.data ?? "Error: did not receive a response.",
                   role: Roles.model,
                   statusCode: reply.statusCode,
                 ),

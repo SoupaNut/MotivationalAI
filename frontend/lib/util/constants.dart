@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 
+// ------------------- BUILD OPTIONS -------------------
+const bool kBuildDebug = true;
+
 // ------------------- GENERAL -------------------
 const String kAppTitle = 'MoMo';
 const double kIconSize = 24.0;
+
+// ------------------- DRAWER -------------------
+const double kDrawerItemFontSize = 14.0;
+const double kDrawerItemSelectedBorderRadius = 12.0;
+const double kDrawerItemPadVertical = 4.0;
+const double kDrawerItemPadHorizontal = 8.0;
+const Color kSelectedDrawerItemColor = Color.fromRGBO(224, 224, 224, 1);
+const Color kSelectedDrawerItemTextColor = Colors.deepPurple;
+const Color kUnselectedDrawerItemTextColor = Colors.black;
+
 
 // ------------------- USER INPUT FIELD -------------------
 // Container
@@ -34,8 +47,12 @@ const Color kBubbleTextColor = Colors.black;
 const Color kBubbleErrorColor = Color.fromRGBO(239, 154, 154, 1); // Colors.red.shade200
 
 // ------------------- API -------------------
-const int kRequestTimeout = 10;
+const int kRequestTimeout = 60;
 const String kLocalHostUrl = "http://10.0.2.2:5000";
 const String kGCloudUrl = "https://appimg-274488824075.us-central1.run.app";
 const String kApiRequestRoute = "/api/gemini/request";
-const String kApiNewChatRoute = "/api/gemini/new";
+const String kApiNewChatRoute = "/api/gemini/new_chat";
+const String kApiLoadChatRoute = "/api/gemini/load_chat";
+const String kApiGetCurrentSessionIdRoute = "/api/gemini/current_session_id";
+const String kApiGetAllChatsRoute = "/api/gemini/all_chats";
+const String kApiGetAllChatSummariesRoute = "/api/gemini/all_chat_summaries";

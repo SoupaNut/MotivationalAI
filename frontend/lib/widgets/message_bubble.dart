@@ -6,6 +6,7 @@ enum Roles {
   model,
 }
 
+
 class Message {
   final String text;
   final Roles role;
