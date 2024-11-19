@@ -50,10 +50,17 @@ class _ChatDrawerState extends State<ChatDrawer> {
                       BorderRadius.circular(kDrawerItemSelectedBorderRadius),
                 ),
                 child: ListTile(
+                  trailing: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.keyboard_control_outlined,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.only(left: 8.0),
                   visualDensity: const VisualDensity(
                     horizontal: 0,
                     vertical: -4, // lower padding from ListTile
-                  ), 
+                  ),
                   title: Text(
                     session.summary,
                     style: TextStyle(
