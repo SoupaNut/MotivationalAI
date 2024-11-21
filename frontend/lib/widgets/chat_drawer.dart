@@ -79,6 +79,7 @@ class _ChatDrawerState extends State<ChatDrawer> {
                         .setSessionId(newSessionId: session.sessionId);
                     widget.userInputKey.currentState
                         ?.loadChat(session.sessionId);
+                    print(session.sessionId);
 
                     // close drawer
                     Navigator.pop(context);

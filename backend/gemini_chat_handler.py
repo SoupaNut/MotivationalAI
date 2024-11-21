@@ -1,6 +1,9 @@
 import google.generativeai as genai
 from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from dotenv import load_dotenv
+from datetime import datetime
+from pydantic import ValidationError
+from chat_schema import *
 import os
 import json
 import uuid
@@ -62,8 +65,15 @@ class GeminiChatHandler:
     def load_all_chats():
         try:
             with open(CHAT_HISTORY_FILE, "r") as file:
-                return json.load(file)["chats"]
+                raw_data = json.load(file)
+                chat_history = ChatHistory(**raw_data) # validate and parse
+                return chat_history.chats
+            
         except (FileNotFoundError, json.JSONDecodeError):
+            return []
+        
+        except ValidationError as e:
+            print(f"Validation error: {e.json()}")
             return []
         
     def start_new_chat(self) -> tuple[str, int]:
@@ -94,14 +104,13 @@ class GeminiChatHandler:
         if not chat:
             return "Session ID not found", 404
         
-        
         try:
-            history = chat.get("history")
+            history = to_json(chat.history)
             self.chat_session = self.model.start_chat(history=history)
-
             self.session_id = session_id
-
-            return {"sessionId": session_id, "history": history}, 200
+            
+            return to_json(chat), 200
+        
         except Exception as e:
             return str(e), 500
 
@@ -111,18 +120,26 @@ class GeminiChatHandler:
             # find existing chat or create a new one
             chat = self.find_chat(self.session_id)
             if not chat:
-                chat = {"sessionId": self.session_id, "history": [], "summary": ""}
+                chat = Chat(sessionId=self.session_id)
                 self.all_chats.append(chat)
-                # self.all_chats[self.session_id] = {"history": [], "summary": ""}
 
             # add user message
-            chat["history"].append({"role": "user", "parts": [message]})
+            user_message = Message(role="user", parts=[message])
+            chat.history.append(user_message)
+            
+            print("Before: ", chat)
+            
+            # send message to model
             response = self.chat_session.send_message(message)
             cleaned_text = response.text.rstrip() # remove white space at the end, since gemini seems to add extra newlines
 
             # add model response
-            chat["history"].append({"role": "model", "parts": [cleaned_text]})
+            model_message = Message(role="model", parts=[response])
+            chat.history.append(model_message)
 
+            chat.timestamp = datetime.now().isoformat() + "Z"
+            
+            print("After: ", chat)
             
             return cleaned_text, 200
         
@@ -137,12 +154,17 @@ class GeminiChatHandler:
     
     def save_chat_history(self, session_id):
         chat = self.find_chat(session_id)
+        # print(type(self.all_chats))
         if chat:
             summary = self.generate_summary()
-            chat["summary"] = summary
+            chat.summary = summary
 
             with open(CHAT_HISTORY_FILE, "w") as file:
-                json.dump({"chats": self.all_chats}, file, indent=4)
+                chat_objects: List[Chat] = [Chat(**chat) for chat in self.all_chats]
+                chat_history = ChatHistory(chat_objects);
+                
+                # json.dump(to_json(chats), file, indent=4)
+                json.dump(to_json(chat_history), file, indent=4)
                 
 
     def get_all_chats(self):
@@ -154,6 +176,6 @@ class GeminiChatHandler:
     # helper function
     def find_chat(self, session_id):
         for chat in self.all_chats:
-            if chat["sessionId"] == session_id:
+            if chat.sessionId == session_id:
                 return chat
         return None

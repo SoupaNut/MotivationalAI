@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from gemini_chat_handler import GeminiChatHandler
+from chat_schema import *
 import copy
 
 # Initialize flask app
@@ -51,13 +52,10 @@ def get_all_chats():
 
 @app.route("/api/gemini/all_chat_summaries", methods=['GET'])
 def get_all_chat_summaries():
-    all_chats = copy.deepcopy(chat_handler.get_all_chats()) # create a copy of chat_handler's all_chats
+    all_chats: List[Chat] = copy.deepcopy(chat_handler.get_all_chats()) # create a copy of chat_handler's all_chats
+    chat_summaries = to_json(all_chats, include={"sessionId": True, "summary": True})
     
-    # remove history to save on memory
-    for chat in all_chats:
-        chat.pop("history", None)
-        
-    return jsonify(all_chats), 200
+    return jsonify(chat_summaries), 200
 
 
 if __name__ == "__main__":
