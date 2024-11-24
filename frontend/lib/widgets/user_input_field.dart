@@ -30,7 +30,7 @@ class UserInputFieldState extends State<UserInputField> {
 
   void loadChat(String sessionId) async {
     final response = await apiLoadChat(sessionId);
-    final history = ((response.statusCode == 200) ? response.data["history"] : []) as List<dynamic>;
+    final List<dynamic> history = (response.statusCode == 200) ? response.data["history"] : [];
 
     setState(() {
       _messages.clear();

@@ -54,19 +54,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _getSessionId() async {
-    final sessionProvider = Provider.of<SessionProvider>(context, listen: false);
+    final sessionProvider =
+        Provider.of<SessionProvider>(context, listen: false);
     await sessionProvider.loadSessionId();
   }
 
   Future<void> _getNewChatSession() async {
-    final chatSessionsProvider = Provider.of<ChatSessionsProvider>(context, listen: false);
+    final chatSessionsProvider =
+        Provider.of<ChatSessionsProvider>(context, listen: false);
     final response = await apiStartNewChat();
     final newSessionId = response.data;
     await chatSessionsProvider.loadChatSessions();
-    chatSessionsProvider.addChatSession(newSessionId: newSessionId, newSummary: "New Chat");
+
+    String currentTimestamp = DateTime.now().toUtc().toIso8601String();
+    chatSessionsProvider.addChatSession(
+      newSessionId: newSessionId,
+      newSummary: "New Chat",
+      newTimestamp: currentTimestamp,
+    );
   }
-
-
 
   @override
   Widget build(BuildContext context) {

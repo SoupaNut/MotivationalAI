@@ -55,14 +55,14 @@ Future<GeminiResponse> apiGetCurrentSessionId() async {
   );
 }
 
-Future<GeminiResponse> apiGetAllChats() async {
-  return _makeRequest(
-    url: kBuildDebug
-        ? "$kLocalHostUrl$kApiGetAllChatsRoute"
-        : "$kGCloudUrl$kApiGetAllChatsRoute",
-    method: HttpMethod.GET,
-  );
-}
+// Future<GeminiResponse> apiGetAllChats() async {
+//   return _makeRequest(
+//     url: kBuildDebug
+//         ? "$kLocalHostUrl$kApiGetAllChatsRoute"
+//         : "$kGCloudUrl$kApiGetAllChatsRoute",
+//     method: HttpMethod.GET,
+//   );
+// }
 
 Future<GeminiResponse> apiGetAllChatSummaries() async {
   return _makeRequest(

@@ -54,5 +54,5 @@ const String kApiRequestRoute = "/api/gemini/request";
 const String kApiNewChatRoute = "/api/gemini/new_chat";
 const String kApiLoadChatRoute = "/api/gemini/load_chat";
 const String kApiGetCurrentSessionIdRoute = "/api/gemini/current_session_id";
-const String kApiGetAllChatsRoute = "/api/gemini/all_chats";
+// const String kApiGetAllChatsRoute = "/api/gemini/all_chats";
 const String kApiGetAllChatSummariesRoute = "/api/gemini/all_chat_summaries";

@@ -4,13 +4,15 @@ import 'package:motivational_app/api/api_service.dart';
 class ChatSession {
   final String sessionId;
   final String summary;
+  final String timestamp;
 
-  ChatSession({required this.sessionId, required this.summary});
+  ChatSession({required this.sessionId, required this.summary, required this.timestamp});
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     return ChatSession(
       sessionId: json["sessionId"] as String,
       summary: json["summary"] as String,
+      timestamp: json["timestamp"] as String,
     );
   }
 }
@@ -42,12 +44,15 @@ class ChatSessionsProvider extends ChangeNotifier {
     _chatSessions = (response.data as List<dynamic>)
         .map((item) => ChatSession.fromJson(item as Map<String, dynamic>))
         .toList();
+
+    _chatSessions.sort((a, b) => b.timestamp.compareTo(a.timestamp));
     notifyListeners();
   }
 
   void addChatSession({
     required String newSessionId,
     required String newSummary,
+    required String newTimestamp,
   }) async {
     // Don't do anything if newSessionId already exists
     final exists =
@@ -61,6 +66,7 @@ class ChatSessionsProvider extends ChangeNotifier {
       ChatSession(
         sessionId: newSessionId,
         summary: newSummary,
+        timestamp: newTimestamp,
       ),
     );
 

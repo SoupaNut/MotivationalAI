@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-from gemini_chat_handler import GeminiChatHandler
+# from gemini_chat_handler import GeminiChatHandler
+from chat_handler import GeminiChatHandler
 from chat_schema import *
 import copy
 
@@ -24,6 +25,7 @@ def handle_user_request():
 @app.route("/api/gemini/new_chat", methods=['POST'])
 def start_new_chat():
         response, status_code = chat_handler.start_new_chat()
+        print("New Session ID: ", response)
         return jsonify(response), status_code
 
 
@@ -44,16 +46,16 @@ def get_current_session_id():
     return jsonify(session_id), 200
 
 
-@app.route("/api/gemini/all_chats", methods=['GET'])
-def get_all_chats():
-    all_chats = chat_handler.get_all_chats()
-    return jsonify(all_chats), 200
+# @app.route("/api/gemini/all_chats", methods=['GET'])
+# def get_all_chats():
+#     all_chats = chat_handler.get_all_chats()
+#     return jsonify(all_chats), 200
 
 
 @app.route("/api/gemini/all_chat_summaries", methods=['GET'])
 def get_all_chat_summaries():
-    all_chats: List[Chat] = copy.deepcopy(chat_handler.get_all_chats()) # create a copy of chat_handler's all_chats
-    chat_summaries = to_json(all_chats, include={"sessionId": True, "summary": True})
+    all_chats = copy.deepcopy(chat_handler.get_all_chats()) # create a copy of handler's all_chats
+    chat_summaries = [{"sessionId": chat.sessionId, "summary": chat.summary, "timestamp": chat.timestamp} for chat in all_chats.chats.values()]
     
     return jsonify(chat_summaries), 200
 
