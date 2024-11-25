@@ -32,10 +32,6 @@ class Chat(BaseModel):
         self.history.append(message)
         self.timestamp = datetime.now().isoformat() + "Z"
     
-# TODO: Delete
-class ChatHistory(BaseModel):
-    chats: List[Chat] = Field(default_factory=list)
-    
 
 class ChatManager(BaseModel):
     chats: Dict[str, Chat] = Field(default_factory=dict)
@@ -63,24 +59,3 @@ class ChatManager(BaseModel):
         except ValidationError as e:
             self.chats = {}
             print(e)
-
-
-def to_json(data: Union[BaseModel, List[BaseModel]], include: Optional[Dict[str, Any]] = None, exclude: Optional[Dict[str, Any]] = None) -> Any:
-    """
-    Converts a Pydantic BaseModel instance or a list of BaseModel instances into JSON-serializable format,
-    with the option to exclude specified fields.
-
-    Args:
-        data: A Pydantic BaseModel instance or a list of BaseModel instances.
-        include (Optional[Dict[str, Any]]): Fields to include (set True for fields you want).
-        exclude (Optional[Dict[str, Any]]): Fields to exclude (set True for fields you want to omit).
-
-    Returns:
-        A JSON-serializable dictionary or list of dictionaries.
-    """
-    if isinstance(data, BaseModel):
-        return data.model_dump(include=include, exclude=exclude)  # Convert a single BaseModel to a dictionary with exclusions
-    elif isinstance(data, list):
-        return [item.model_dump(include=include, exclude=exclude) for item in data if isinstance(item, BaseModel)]  # Convert a list of BaseModel
-    else:
-        raise TypeError("Input must be a Pydantic BaseModel or a list of BaseModel instances.")

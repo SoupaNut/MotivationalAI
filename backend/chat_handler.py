@@ -8,7 +8,6 @@ from chat_schema import *
 MODEL_NAME = "gemini-1.5-flash"
 CONFIG_FILE = "model_config.txt"
 GENERATE_SUMMARY_PROMPT_FILE = "summary_prompt.txt"
-# CHAT_HISTORY_FILE = "chat_history.json"
 CHAT_HISTORY_FILE = "history.json"
 TIMEOUT_DURATION = 10 #seconds
 
@@ -101,7 +100,6 @@ class GeminiChatHandler:
         chat = self.all_chats.get_chat(session_id)
         
         if not chat:
-            print(self.current_chat.sessionId)
             self.current_chat = Chat(sessionId=session_id)
             return "Session ID not found. Creating new Chat with the provided session ID", 404
         
@@ -116,6 +114,24 @@ class GeminiChatHandler:
         except Exception as e:
             return str(e), 500
         
+    
+    def delete_chats(self, session_ids: List[str]):
+        """
+        Deletes chats based on the given session IDs
+        """
+        
+        try:
+            for session_id in session_ids:
+                self.all_chats.chats.pop(session_id)
+            return "", 200
+        
+        except KeyError as e:
+            return "Could not find session ID to delete. {e}", 404
+        
+        except Exception as e:
+            return str(e), 500
+        
+    
     
     def send_message(self, message: str) -> tuple[str, int]:
         """
@@ -146,8 +162,6 @@ class GeminiChatHandler:
             # add model response
             model_message = Message(role="model", parts=[cleaned_text])
             chat.add_message(model_message)
-            
-            print("Current session ID: ", self.current_chat.sessionId)
             
             return cleaned_text, 200
         
