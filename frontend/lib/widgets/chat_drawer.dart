@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:motivational_app/api/api_service.dart';
+import 'package:motivational_app/util/dialogs.dart';
 import '../providers/session_provider.dart';
 import 'package:provider/provider.dart';
 import '../util/constants.dart';
 import 'user_input_field.dart';
+
+enum DrawerPopupOptions { delete }
 
 class ChatDrawer extends StatefulWidget {
   final GlobalKey<UserInputFieldState> userInputKey;
@@ -36,6 +40,7 @@ class _ChatDrawerState extends State<ChatDrawer> {
           ),
           ...chatSessions.map((session) {
             final bool isSelected = session.sessionId == currentSessionId;
+            final bool isNewChat = session.summary == kNewChatSummary;
             return Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: kDrawerItemPadHorizontal,
@@ -50,11 +55,67 @@ class _ChatDrawerState extends State<ChatDrawer> {
                       BorderRadius.circular(kDrawerItemSelectedBorderRadius),
                 ),
                 child: ListTile(
-                  trailing: IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.keyboard_control_outlined,
-                    ),
+                  trailing: isNewChat ? null : PopupMenuButton<DrawerPopupOptions>(
+                    onSelected: (DrawerPopupOptions option) async {
+                      if (option == DrawerPopupOptions.delete) {
+                        final confirm = await showAlertConfirmation(
+                          context: context,
+                          title: "Delete Chat",
+                          text:
+                              "Are you sure you want to delete the chat session \"${session.summary}\"? This action cannot be undone.",
+                          confirmButtonText: "Delete",
+                        );
+
+                        if (confirm == true) {
+                          final response =
+                              await apiDeleteChats([session.sessionId]);
+                          if (response.statusCode == 200) {
+                            setState(() {
+                              chatSessions.removeWhere(
+                                  (s) => s.sessionId == session.sessionId);
+                            });
+
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      'Chat session "${session.summary}" deleted successfully.'),
+                                  // backgroundColor: Colors.green,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      }
+
+                      // print("Option: $option, SessionID: ${session.sessionId}");
+                    },
+                    icon: const Icon(Icons.keyboard_control_outlined),
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<DrawerPopupOptions>>[
+                      const PopupMenuItem<DrawerPopupOptions>(
+                        height: 0,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: kDrawerItemPadHorizontal,
+                          vertical: kDrawerItemPadVertical,
+                        ),
+                        value: DrawerPopupOptions.delete,
+                        child: Row(
+                          children: [
+                            Text(
+                              "Delete",
+                              style: TextStyle(color: Colors.red),
+                            ),
+                            Spacer(),
+                            Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
                   ),
                   contentPadding: const EdgeInsets.only(left: 8.0),
                   visualDensity: const VisualDensity(

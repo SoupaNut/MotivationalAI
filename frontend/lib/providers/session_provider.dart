@@ -6,7 +6,10 @@ class ChatSession {
   final String summary;
   final String timestamp;
 
-  ChatSession({required this.sessionId, required this.summary, required this.timestamp});
+  ChatSession(
+      {required this.sessionId,
+      required this.summary,
+      required this.timestamp});
 
   factory ChatSession.fromJson(Map<String, dynamic> json) {
     return ChatSession(
@@ -69,7 +72,6 @@ class ChatSessionsProvider extends ChangeNotifier {
         timestamp: newTimestamp,
       ),
     );
-
 
     notifyListeners();
   }

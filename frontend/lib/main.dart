@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
     String currentTimestamp = DateTime.now().toUtc().toIso8601String();
     chatSessionsProvider.addChatSession(
       newSessionId: newSessionId,
-      newSummary: "New Chat",
+      newSummary: kNewChatSummary,
       newTimestamp: currentTimestamp,
     );
   }

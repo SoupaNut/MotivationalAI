@@ -15,6 +15,7 @@ const double kDrawerItemPadHorizontal = 8.0;
 const Color kSelectedDrawerItemColor = Color.fromRGBO(224, 224, 224, 1);
 const Color kSelectedDrawerItemTextColor = Colors.deepPurple;
 const Color kUnselectedDrawerItemTextColor = Colors.black;
+const String kNewChatSummary = "New Chat";
 
 
 // ------------------- USER INPUT FIELD -------------------
@@ -53,5 +54,6 @@ const String kGCloudUrl = "https://appimg-274488824075.us-central1.run.app";
 const String kApiRequestRoute = "/api/gemini/request";
 const String kApiNewChatRoute = "/api/gemini/new_chat";
 const String kApiLoadChatRoute = "/api/gemini/load_chat";
+const String kApiDeleteChatsRoute = "/api/gemini/delete_chats";
 const String kApiGetCurrentSessionIdRoute = "/api/gemini/current_session_id";
 const String kApiGetAllChatSummariesRoute = "/api/gemini/all_chat_summaries";

@@ -36,7 +36,7 @@ class GeminiChatHandler:
         generation_config = {
             "temperature": 2,
             "top_p": 0.95,
-            "top_k": 1,
+            "top_k": 40,
             "max_output_tokens": 150,
             "response_mime_type": "text/plain",
         }
@@ -119,17 +119,13 @@ class GeminiChatHandler:
         """
         Deletes chats based on the given session IDs
         """
+        chats_deleted = self.all_chats.delete_chats(session_ids)
+        self.save_chats_to_file()
         
-        try:
-            for session_id in session_ids:
-                self.all_chats.chats.pop(session_id)
-            return "", 200
-        
-        except KeyError as e:
-            return "Could not find session ID to delete. {e}", 404
-        
-        except Exception as e:
-            return str(e), 500
+        if len(chats_deleted) != len(session_ids):
+            return chats_deleted, 404
+        else:
+            return chats_deleted, 200
         
     
     

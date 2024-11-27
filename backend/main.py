@@ -40,16 +40,7 @@ def load_chat():
     response, status_code = chat_handler.load_chat(session_id)
     return jsonify(response), status_code
 
-@app.route("/api/gemini/delete_chats", methods=['POST'])
-def delete_chats():
-    data = request.json
-    session_ids = data.get("sessionIds", "")
-    
-    if not session_ids:
-        return jsonify("Session ID is required"), 400
-    
-    response, status_code = chat_handler.delete_chats(session_ids)
-    return jsonify(response), status_code
+
 
 @app.route("/api/gemini/current_session_id", methods=['GET'])
 def get_current_session_id():
@@ -64,6 +55,16 @@ def get_all_chat_summaries():
     
     return jsonify(chat_summaries), 200
 
+@app.route("/api/gemini/delete_chats", methods=['DELETE'])
+def delete_chats():
+    data = request.json
+    session_ids = data.get("sessionIds", "")
+    
+    if not session_ids:
+        return jsonify("Session ID is required"), 400
+    
+    response, status_code = chat_handler.delete_chats(session_ids)
+    return jsonify(response), status_code
 
 if __name__ == "__main__":
     app.run(debug=True); # for testing and debugging

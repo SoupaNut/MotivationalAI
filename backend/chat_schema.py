@@ -45,9 +45,16 @@ class ChatManager(BaseModel):
         return self.chats.get(session_id)
         
     def delete_chats(self, session_ids: List[str]):
-        """Deletes chats for the given session IDs"""
+        """Deletes chats for the given session IDs. Returns a list of successfully deleted chats"""
+        chats_deleted = []
         for session_id in session_ids:
-            self.chats.pop(session_id)
+            try:
+                self.chats.pop(session_id)
+                chats_deleted.append(session_id)
+            except KeyError:
+                return chats_deleted
+            
+        return chats_deleted
             
     def load_chats(self, filename: str):
         """Load the chats from the given filename"""

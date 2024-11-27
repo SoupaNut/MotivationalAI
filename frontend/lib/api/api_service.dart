@@ -8,7 +8,9 @@ enum HttpMethod {
   // ignore: constant_identifier_names
   GET,
   // ignore: constant_identifier_names
-  POST
+  POST,
+  // ignore: constant_identifier_names
+  DELETE,
 }
 
 final Map<String, String> _headers = {'Content-Type': 'application/json'};
@@ -55,21 +57,24 @@ Future<GeminiResponse> apiGetCurrentSessionId() async {
   );
 }
 
-// Future<GeminiResponse> apiGetAllChats() async {
-//   return _makeRequest(
-//     url: kBuildDebug
-//         ? "$kLocalHostUrl$kApiGetAllChatsRoute"
-//         : "$kGCloudUrl$kApiGetAllChatsRoute",
-//     method: HttpMethod.GET,
-//   );
-// }
-
 Future<GeminiResponse> apiGetAllChatSummaries() async {
   return _makeRequest(
     url: kBuildDebug
         ? "$kLocalHostUrl$kApiGetAllChatSummariesRoute"
         : "$kGCloudUrl$kApiGetAllChatSummariesRoute",
     method: HttpMethod.GET,
+  );
+}
+
+Future<GeminiResponse> apiDeleteChats(List<String> sessionIds) async {
+  return _makeRequest(
+    url: kBuildDebug
+        ? "$kLocalHostUrl$kApiDeleteChatsRoute"
+        : "$kGCloudUrl$kApiDeleteChatsRoute",
+    method: HttpMethod.DELETE,
+    body: {
+      "sessionIds": sessionIds,
+    }
   );
 }
 
@@ -99,6 +104,18 @@ Future<GeminiResponse> _makeRequest({
           .get(
             uri,
             headers: _headers,
+          )
+          .timeout(
+            const Duration(
+              seconds: kRequestTimeout,
+            ),
+          );
+    } else if (method == HttpMethod.DELETE) {
+      response = await http
+          .delete(
+            uri,
+            headers: _headers,
+            body: jsonEncode(body),
           )
           .timeout(
             const Duration(
@@ -148,7 +165,6 @@ Future<GeminiResponse> _makeRequest({
         500,
       );
     }
-
   } on http.ClientException catch (e) {
     return GeminiResponse.error(
       "Error 400: $e",
