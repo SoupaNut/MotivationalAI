@@ -17,7 +17,34 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> {//with WidgetsBindingObserver{
+  // @override
+  // void initState(){
+  //   super.initState();
+  //   WidgetsBinding.instance.addObserver(this);
+  // }
+
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   super.dispose();
+  // }
+
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state)
+  // {
+  //   print("Current state: $state");
+  //   if(state == AppLifecycleState.detached)
+  //   {
+  //     _onCloseCallback();
+  //   }
+  // }
+
+  // Future<void> _onCloseCallback() async {
+  //   print("on Closed callback");
+  //   await apiCloseApp();
+  // }
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -40,7 +67,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>{
   final GlobalKey<UserInputFieldState> _userInputKey =
       GlobalKey<UserInputFieldState>();
 
@@ -79,33 +106,34 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
-          appBar: AppBar(
-            // backgroundColor: Colors.grey,
-            iconTheme: const IconThemeData(color: kIconEnabledColor),
-            centerTitle: true,
-            title: const Text(kAppTitle),
-            actions: [
-              IconButton(
-                onPressed: () async {
-                  _userInputKey.currentState?.clearMessages();
-                  await _getNewChatSession(); // reload chat sessions
-                  await _getSessionId();
-                },
-                icon: SizedBox(
-                  width: kIconSize,
-                  height: kIconSize,
-                  child: Image.asset(
-                    'assets/icons/edit-square.png',
-                    color: kIconEnabledColor,
-                  ),
+        appBar: AppBar(
+          // backgroundColor: Colors.grey,
+          iconTheme: const IconThemeData(color: kIconEnabledColor),
+          centerTitle: true,
+          title: const Text(kAppTitle),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                _userInputKey.currentState?.clearMessages();
+                await _getNewChatSession(); // reload chat sessions
+                await _getSessionId();
+              },
+              icon: SizedBox(
+                width: kIconSize,
+                height: kIconSize,
+                child: Image.asset(
+                  'assets/icons/edit-square.png',
+                  color: kIconEnabledColor,
                 ),
               ),
-            ],
-          ),
-          body: UserInputField(key: _userInputKey),
-          drawer: ChatDrawer(
-            userInputKey: _userInputKey,
-          )),
+            ),
+          ],
+        ),
+        body: UserInputField(key: _userInputKey),
+        drawer: ChatDrawer(
+          userInputKey: _userInputKey,
+        ),
+      ),
     );
   }
 }

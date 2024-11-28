@@ -57,3 +57,4 @@ const String kApiLoadChatRoute = "/api/gemini/load_chat";
 const String kApiDeleteChatsRoute = "/api/gemini/delete_chats";
 const String kApiGetCurrentSessionIdRoute = "/api/gemini/current_session_id";
 const String kApiGetAllChatSummariesRoute = "/api/gemini/all_chat_summaries";
+const String kApiCloseAppRoute = "/api/gemini/close";

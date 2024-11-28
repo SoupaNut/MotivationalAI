@@ -172,7 +172,7 @@ class GeminiChatHandler:
         with open(filename, "w", encoding="utf-8") as file:
             data = self.all_chats.model_dump()
             
-            # ensure_ascii ensures emojis and other non-ASCII characters are writte directly in JSON, instead of being escaped
+            # ensure_ascii ensures emojis and other non-ASCII characters are written directly in JSON, instead of being escaped
             json_data = json.dumps(data, indent=4, ensure_ascii=False) 
             file.write(json_data)
             
@@ -185,3 +185,34 @@ class GeminiChatHandler:
     def get_all_chats(self) -> ChatManager:
         """Gets all chats and returns a ChatManager object"""
         return self.all_chats
+    
+    # TODO: Is this needed?
+    def close_handler(self):
+        """
+        Looks at self.all_chats and compares each chat's timestamp. If the timestamp is more recent than the one in the file and the summary is the same,
+        then update the summary of that chat. Lastly, save self.all_chats to the file.
+        """
+        # read the history in the file
+        stored_data = ChatManager()
+        stored_data.load_chats()
+        
+        for session_id, chat in self.all_chats.chats.items():
+            stored_chat = stored_data.get_chat(session_id) # TODO: what happens when it's a new chat that has history but isn't in the file?
+            
+            # Define the format for ISO 8601 with microseconds and 'Z'
+            format = "%Y-%m-%dT%H:%M:%S.%fZ"
+            
+            # convert strings to datetime objects
+            current_time = datetime.strptime(chat.timestamp, format)
+            stored_time = datetime.strptime(stored_chat.timestamp, format)
+            
+            # generate a new summary if the current timestamp is more recent and the summaries are the same
+            same_summary = chat.summary == stored_chat.summary
+            if (current_time > stored_time) and same_summary:
+                print(f"genertae summary: {chat.summary}")
+                
+        return "", 200 #TODO: delete
+            
+            
+            
+                

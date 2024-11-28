@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-# from gemini_chat_handler import GeminiChatHandler
 from chat_handler import GeminiChatHandler
 from chat_schema import *
 import copy
@@ -65,6 +64,25 @@ def delete_chats():
     
     response, status_code = chat_handler.delete_chats(session_ids)
     return jsonify(response), status_code
+
+# TODO: Is this needed? Or should this be called server-side?
+@app.route("/api/gemini/close", methods=['POST'])
+def close_app():
+    """
+    Call this function when mobile app is closed. The server will figure out which chat sessions were updated,
+    generate new summaries, and then save all chats to a file. 
+    
+    Returns a list of sessions that were updated.
+    """
+    print("closing handler")
+    response, status_code = chat_handler.close_handler()
+    
+    if status_code != 200:
+        print(f"Something went wrong when closing the handler.\nError {status_code}: {response}")
+        
+    return jsonify(response), status_code
+    
+    
 
 if __name__ == "__main__":
     app.run(debug=True); # for testing and debugging

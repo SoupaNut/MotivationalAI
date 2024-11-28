@@ -48,6 +48,15 @@ Future<GeminiResponse> apiLoadChat(String sessionId) async {
   );
 }
 
+Future<GeminiResponse> apiCloseApp() async {
+  return _makeRequest(
+    url: kBuildDebug
+        ? "$kLocalHostUrl$kApiCloseAppRoute"
+        : "$kGCloudUrl$kApiCloseAppRoute",
+    method: HttpMethod.POST,
+  );
+}
+
 Future<GeminiResponse> apiGetCurrentSessionId() async {
   return _makeRequest(
     url: kBuildDebug
