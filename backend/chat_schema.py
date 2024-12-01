@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field, ValidationError
 from typing import List, Any, Dict
 from datetime import datetime
+from google.cloud import storage
+from google.oauth2.service_account import Credentials
 import uuid
 
 class Message(BaseModel):
@@ -55,14 +57,74 @@ class ChatManager(BaseModel):
                 return chats_deleted
             
         return chats_deleted
-            
-    def load_chats(self, filename: str):
-        """Load the chats from the given filename"""
+    
+    def load_chats(self, bucket_name: str, file_path: str, service_account_key_path: str):
+        """
+        Load the chats from a file stored in Google Cloud Storage.
+
+        Args:
+            bucket_name (str): The name of the GCS bucket.
+            file_path (str): The path to the file in the GCS bucket.
+            service_account_key_path (str): Path to the service account key file for authentication.
+        """
         try:
-            with open(filename, "r", encoding="utf-8") as file:
-                raw_data = file.read()
-                parsed_manager = ChatManager.model_validate_json(raw_data)
-                self.chats = parsed_manager.chats
+            blob = self.__get_gc_blob(bucket_name, file_path, service_account_key_path)
+            
+            # download the file content as a string
+            raw_data = blob.download_as_text(encoding="utf-8")
+            
+            parsed_manager = ChatManager.model_validate_json(raw_data)
+            self.chats = parsed_manager.chats
+            
         except ValidationError as e:
             self.chats = {}
-            print(e)
+            print("Validation Error: ", e)
+        except Exception as e:
+            self.chats = {}
+            print("Error loading chats from GCS: ", e)
+            
+    def save_chats(self, bucket_name: str, file_path: str, service_account_key_path: str):
+        """
+        Save the current chats to a file in Google Cloud Storage.
+
+        Args:
+            bucket_name (str): The name of the GCS bucket.
+            file_path (str): The path to the file in the GCS bucket.
+            service_account_key_path (str): Path to the service account key file for authentication.
+        """
+        try:
+            blob = self.__get_gc_blob(bucket_name, file_path, service_account_key_path)
+            data = self.model_dump_json(indent=4)
+            
+            blob.upload_from_string(data, content_type="application/json")
+            
+            print(f"Chats saved successfully to {file_path} in bucket {bucket_name}.")
+            
+        except Exception as e:
+            self.chats = {}
+            print("Error saving chats to GCS: ", e)
+    
+    
+    def __get_gc_blob(self, bucket_name: str, file_path: str, service_account_key_path: str):
+        """
+        Helper function that gets and returns the blob at the given bucket, file path, and service account key.
+
+        Args:
+            bucket_name (str): The name of the GCS bucket.
+            file_path (str): The path to the file in the GCS bucket.
+            service_account_key_path (str): Path to the service account key file for authentication.
+        """
+        # Create credentials from the service account key file
+        credentials = Credentials.from_service_account_file(service_account_key_path)
+
+        # Create storage client using the provided credentials
+        # client = storage.Client()
+        client = storage.Client(credentials=credentials)
+        
+        # get bucket with name
+        bucket = client.get_bucket(bucket_name)
+        
+        # get the blob
+        blob = bucket.get_blob(file_path)
+        
+        return blob

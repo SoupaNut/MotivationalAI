@@ -8,7 +8,9 @@ from chat_schema import *
 MODEL_NAME = "gemini-1.5-flash"
 CONFIG_FILE = "model_config.txt"
 GENERATE_SUMMARY_PROMPT_FILE = "summary_prompt.txt"
+BUCKET_NAME = "motivational-chatbot-history"
 CHAT_HISTORY_FILE = "history.json"
+SERVICE_ACCOUNT_KEY_FILE = "credentials/service-account-key.json"
 TIMEOUT_DURATION = 10 #seconds
 
 class GeminiChatHandler:
@@ -17,13 +19,13 @@ class GeminiChatHandler:
         self.model = self.init_model()
         self.chat_session = self.model.start_chat(history=[])
         self.all_chats = ChatManager()
-        self.all_chats.load_chats(CHAT_HISTORY_FILE)
+        self.all_chats.load_chats(BUCKET_NAME, CHAT_HISTORY_FILE, SERVICE_ACCOUNT_KEY_FILE)
         self.current_chat = Chat()
         
         
     @staticmethod
     def config_api_key():
-        load_dotenv(".env")
+        load_dotenv("credentials/.env")
         api_key = os.getenv("API_KEY")
         if api_key:
             genai.configure(api_key=api_key)
@@ -73,17 +75,14 @@ class GeminiChatHandler:
                 return self.current_chat.sessionId, 200
             
             # generate a summary for the current chat
-            # print("generate summary")
             response = self.chat_session.send_message("Summarize this conversation in less than 5 words. Don't use emojis or punctuation. Write the summary in title case.")
             self.current_chat.set_summary(response.text.strip())
             
             # add current chat to all_chats and save to file
-            # print("add current chat")
             self.all_chats.add_chat(self.current_chat)
-            self.save_chats_to_file()
+            self.all_chats.save_chats(BUCKET_NAME, CHAT_HISTORY_FILE, SERVICE_ACCOUNT_KEY_FILE)
             
             # create new chat and session, and return its session ID
-            # print("create new chat")
             self.current_chat = Chat()
             self.chat_session = self.model.start_chat(history=[])
             return self.current_chat.sessionId, 200
@@ -120,7 +119,7 @@ class GeminiChatHandler:
         Deletes chats based on the given session IDs
         """
         chats_deleted = self.all_chats.delete_chats(session_ids)
-        self.save_chats_to_file()
+        self.all_chats.save_chats(BUCKET_NAME, CHAT_HISTORY_FILE, SERVICE_ACCOUNT_KEY_FILE)
         
         if len(chats_deleted) != len(session_ids):
             return chats_deleted, 404
@@ -194,7 +193,7 @@ class GeminiChatHandler:
         """
         # read the history in the file
         stored_data = ChatManager()
-        stored_data.load_chats()
+        stored_data.load_chats(BUCKET_NAME, CHAT_HISTORY_FILE, SERVICE_ACCOUNT_KEY_FILE)
         
         for session_id, chat in self.all_chats.chats.items():
             stored_chat = stored_data.get_chat(session_id) # TODO: what happens when it's a new chat that has history but isn't in the file?
